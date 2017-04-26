@@ -25,19 +25,17 @@ angular.module('mm.core')
  * to download/refresh it.
  *
  * Attributes:
- * @param {Object} file                Required. Object with the following attributes:
- *                                         'filename': Name of the file.
- *                                         'fileurl' or 'url': File URL.
- *                                         'filesize': Optional. Size of the file.
- * @param {String} [component]         Component the file belongs to.
- * @param {Number} [componentId]       Component ID.
- * @param {Boolean} [timemodified]     If set, the value will be used to check if the file is outdated.
- * @param {Boolean} [canDelete]        True if file can be deleted, false otherwise.
- * @param {Function} [onDelete]        Function to call when the delete button is clicked.
- * @param {Boolean} [alwaysDownload]   True if refresh button should be shown even if the file is not outdated. Defaults to false.
- *                                     Use it for files that you cannot determine if they're outdated or not.
- * @param {Boolean} [canDownload=true] True if file can be downloaded, false otherwise. Defaults to true.
- * @param {Boolean} [noBorder=false]   True if want to show file entry without borders. Defaults to false.
+ * @param {Object} file            Required. Object with the following attributes:
+ *                                     'filename': Name of the file.
+ *                                     'fileurl' or 'url': File URL.
+ *                                     'filesize': Optional. Size of the file.
+ * @param {String} [component]       Component the file belongs to.
+ * @param {Number} [componentId]     Component ID.
+ * @param {Boolean} [timemodified]   If set, the value will be used to check if the file is outdated.
+ * @param {Boolean} [canDelete]      True if file can be deleted, false otherwise.
+ * @param {Function} [onDelete]      Function to call when the delete button is clicked.
+ * @param {Boolean} [alwaysDownload] True if refresh button should be shown even if the file is not outdated. Defaults to false.
+ *                                   Use it for files that you cannot determine if they're outdated or not.
  */
 .directive('mmFile', function($q, $mmUtil, $mmFilepool, $mmSite, $mmApp, $mmEvents, $mmFS, mmCoreDownloaded, mmCoreDownloading,
             mmCoreNotDownloaded, mmCoreOutdated) {
@@ -82,12 +80,12 @@ angular.module('mm.core')
 
         scope.isDownloading = true;
         return $mmFilepool.downloadUrl(siteId, fileUrl, false, component, componentId, timeModified).then(function(localUrl) {
+            getState(scope, siteId, fileUrl, timeModified, alwaysDownload); // Update state.
             return localUrl;
-        }).catch(function() {
-            // Call getState to make sure we have the right state.
+        }, function() {
             return getState(scope, siteId, fileUrl, timeModified, alwaysDownload).then(function() {
                 if (scope.isDownloaded) {
-                    return $mmFilepool.getInternalUrlByUrl(siteId, fileUrl);
+                    return localUrl;
                 } else {
                     return $q.reject();
                 }
@@ -127,10 +125,8 @@ angular.module('mm.core')
                         return $q.reject();
                     }
 
-                    var isDownloading = scope.isDownloading;
-                    scope.isDownloading = true; // This check could take a while, show spinner.
                     return $mmFilepool.shouldDownloadBeforeOpen(fixedUrl, fileSize).then(function() {
-                        if (isDownloading) {
+                        if (scope.isDownloading) {
                             // It's already downloading, stop.
                             return;
                         }
@@ -142,7 +138,7 @@ angular.module('mm.core')
                             downloadFile(scope, siteId, fileUrl, component, componentId, timeModified, alwaysDownload);
                         }
 
-                        if (isDownloading|| !scope.isDownloaded || isOnline) {
+                        if (scope.isDownloading || !scope.isDownloaded || isOnline) {
                             // Not downloaded or outdated and online, return the online URL.
                             return fixedUrl;
                         } else {
@@ -176,9 +172,7 @@ angular.module('mm.core')
         scope: {
             file: '=',
             canDelete: '@?',
-            onDelete: '&?',
-            canDownload: '@?',
-            noBorder : '@?'
+            onDelete: '&?'
         },
         link: function(scope, element, attrs) {
             var fileUrl = scope.file.fileurl || scope.file.url,
@@ -189,7 +183,6 @@ angular.module('mm.core')
                 component = attrs.component,
                 componentId = attrs.componentId,
                 alwaysDownload = attrs.alwaysDownload && attrs.alwaysDownload !== 'false',
-                canDownload = scope.canDownload !== false && scope.canDownload !== 'false',
                 observer;
 
             if (!fileName) {
@@ -199,17 +192,16 @@ angular.module('mm.core')
 
             scope.filename = fileName;
             scope.fileicon = $mmFS.getFileIcon(fileName);
+            getState(scope, siteId, fileUrl, timeModified, alwaysDownload);
 
-            if (canDownload) {
-                getState(scope, siteId, fileUrl, timeModified, alwaysDownload);
-
-                // Update state when receiving events about this file.
-                $mmFilepool.getFileEventNameByUrl(siteId, fileUrl).then(function(eventName) {
-                    observer = $mmEvents.on(eventName, function() {
-                        getState(scope, siteId, fileUrl, timeModified, alwaysDownload);
-                    });
+            $mmFilepool.getFileEventNameByUrl(siteId, fileUrl).then(function(eventName) {
+                observer = $mmEvents.on(eventName, function(data) {
+                    getState(scope, siteId, fileUrl, timeModified, alwaysDownload);
+                    if (!data.success) {
+                        $mmUtil.showErrorModal('mm.core.errordownloading', true);
+                    }
                 });
-            }
+            });
 
             scope.download = function(e, openAfterDownload) {
                 e.preventDefault();
@@ -229,18 +221,16 @@ angular.module('mm.core')
                     // File needs to be opened now. If file needs to be downloaded, skip the queue.
                     openFile(scope, siteId, fileUrl, fileSize, component, componentId, timeModified, alwaysDownload)
                             .catch(function(error) {
-                        $mmUtil.showErrorModalDefault(error, 'mm.core.errordownloading', true);
+                        $mmUtil.showErrorModal(error);
                     });
                 } else {
                     // File doesn't need to be opened (it's a prefetch). Show confirm modal if file size is defined and it's big.
-                    promise = fileSize ? $mmUtil.confirmDownloadSize({size: fileSize, total: true}) : $q.when();
+                    promise = fileSize ? $mmUtil.confirmDownloadSize(fileSize) : $q.when();
                     promise.then(function() {
                         // User confirmed, add the file to queue.
                         $mmFilepool.invalidateFileByUrl(siteId, fileUrl).finally(function() {
                             scope.isDownloading = true;
-                            $mmFilepool.addToQueueByUrl(siteId, fileUrl, component, componentId, timeModified).catch(function() {
-                                $mmUtil.showErrorModal('mm.core.errordownloading', true);
-                            });
+                            $mmFilepool.addToQueueByUrl(siteId, fileUrl, component, componentId, timeModified);
                         });
                     });
                 }

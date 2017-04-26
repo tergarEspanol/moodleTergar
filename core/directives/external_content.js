@@ -31,7 +31,7 @@ angular.module('mm.core')
  * Attributes accepted:
  *     - siteid: Reference to the site ID if different than the site the user is connected to.
  */
-.directive('mmExternalContent', function($log, $mmFilepool, $mmSite, $mmSitesManager, $mmUtil, $q, $mmApp, $ionicPlatform) {
+.directive('mmExternalContent', function($log, $mmFilepool, $mmSite, $mmSitesManager, $mmUtil, $q, $mmApp) {
     $log = $log.getInstance('mmExternalContent');
 
     /**
@@ -49,12 +49,7 @@ angular.module('mm.core')
             type = dom.getAttribute('type');
         e.setAttribute('src', url);
         if (type) {
-            if (ionic.Platform.isAndroid() && type == 'video/quicktime') {
-                // Fix for VideoJS/Chrome bug https://github.com/videojs/video.js/issues/423 .
-                e.setAttribute('type', 'video/mp4');
-            } else {
-                e.setAttribute('type', type);
-            }
+            e.setAttribute('type', type);
         }
         dom.parentNode.insertBefore(e, dom);
     }
@@ -72,25 +67,6 @@ angular.module('mm.core')
      */
     function handleExternalContent(siteId, dom, targetAttr, url, component, componentId) {
 
-        if (dom.tagName == 'VIDEO' && dom.textTracks && targetAttr != 'poster') {
-            // It's a video with subtitles. In iOS, subtitles position is wrong so it needs to be fixed.
-            dom.textTracks.onaddtrack = function(event) {
-                if (event.track) {
-                    event.track.oncuechange = function() {
-                        var line = $ionicPlatform.isTablet() || ionic.Platform.isAndroid() ? 90 : 80;
-                        // Position all subtitles to a percentage of video height.
-                        angular.forEach(event.track.cues, function(cue) {
-                            cue.snapToLines = false;
-                            cue.line = line;
-                            cue.size = 100; // This solves some Android issue.
-                        });
-                        // Delete listener.
-                        event.track.oncuechange = null;
-                    };
-                }
-            };
-        }
-
         if (!url || !$mmUtil.isDownloadableUrl(url)) {
             $log.debug('Ignoring non-downloadable URL: ' + url);
             if (dom.tagName === 'SOURCE') {
@@ -107,17 +83,15 @@ angular.module('mm.core')
                 return $q.reject();
             }
 
-            // Download images, tracks and posters if size is unknown.
-            var fn,
-                downloadUnknown = dom.tagName == 'IMG' || dom.tagName == 'TRACK' || targetAttr == 'poster';
+            var fn;
 
-            if (targetAttr === 'src' && dom.tagName !== 'SOURCE' && dom.tagName !== 'TRACK') {
+            if (targetAttr === 'src' && dom.tagName !== 'SOURCE') {
                 fn = $mmFilepool.getSrcByUrl;
             } else {
                 fn = $mmFilepool.getUrlByUrl;
             }
 
-            return fn(siteId, url, component, componentId, 0, true, downloadUnknown).then(function(finalUrl) {
+            return fn(siteId, url, component, componentId).then(function(finalUrl) {
                 $log.debug('Using URL ' + finalUrl + ' for ' + url);
                 if (dom.tagName === 'SOURCE') {
                     // The browser does not catch changes in SRC, we need to add a new source.
@@ -127,7 +101,7 @@ angular.module('mm.core')
                 }
 
                 // Set events to download big files (not downloaded automatically).
-                if (finalUrl.indexOf('http') === 0 && targetAttr != 'poster' &&
+                if (finalUrl.indexOf('http') === 0 &&
                             (dom.tagName == 'VIDEO' || dom.tagName == 'AUDIO' || dom.tagName == 'A' || dom.tagName == 'SOURCE')) {
                     var eventName = dom.tagName == 'A' ? 'click' : 'play';
 
@@ -178,16 +152,11 @@ angular.module('mm.core')
                     observe = true;
                 }
 
-            } else if (dom.tagName === 'AUDIO' || dom.tagName === 'VIDEO' || dom.tagName === 'SOURCE' || dom.tagName === 'TRACK') {
+            } else if (dom.tagName === 'AUDIO' || dom.tagName === 'VIDEO' || dom.tagName === 'SOURCE') {
                 targetAttr = 'src';
                 sourceAttr = 'targetSrc';
                 if (attrs.hasOwnProperty('ngSrc')) {
                     observe = true;
-                }
-
-                if (dom.tagName === 'VIDEO' && attrs.poster) {
-                    // Handle poster.
-                    handleExternalContent(siteid, dom, 'poster', attrs.poster, component, componentId);
                 }
 
             } else {
