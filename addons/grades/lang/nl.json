@@ -1,5 +1,14 @@
 {
+    "average": "Gemiddelde",
+    "contributiontocoursetotal": "Bijdrage bij het cursustotaal",
+    "feedback": "Feedback",
+    "grade": "Cijfer",
+    "grades": "Cijfers",
     "itemname": "Beoordelingsitem",
-    "nogradesreturned": "Geen cijfers",
-    "viewgrades": "Bekijk cijfers"
+    "lettergrade": "Letterbeoordeling",
+    "percentage": "Percentage",
+    "range": "Bereik",
+    "rank": "Volgorde",
+    "viewgrades": "Bekijk cijfers",
+    "weight": "Weging"
 }

@@ -1,5 +1,14 @@
 {
+    "average": "Durchschnitt",
+    "contributiontocoursetotal": "Teilbewertung",
+    "feedback": "Feedback",
+    "grade": "Bewertung",
+    "grades": "Bewertungen",
     "itemname": "Bewertungsaspekt",
-    "nogradesreturned": "Keine Bewertung zum Anzeigen vorhanden",
-    "viewgrades": "Bewertungen anzeigen"
+    "lettergrade": "Buchstabenwertung",
+    "percentage": "Prozentsatz",
+    "range": "Bandbreite",
+    "rank": "Rang",
+    "viewgrades": "Bewertungen anzeigen",
+    "weight": "Gewichtung"
 }

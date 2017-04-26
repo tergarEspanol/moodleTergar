@@ -1,7 +1,6 @@
 {
     "addcontact": "Adicionar como contato",
     "blockcontact": "Bloquear contato",
-    "blocknoncontacts": "Bloquear todas as mensagens de quem não estiver na minha lista de contatos",
     "contactlistempty": "A lista de contatos está vaiza",
     "contactname": "Nome do contato",
     "contacts": "Contatos",
@@ -12,7 +11,6 @@
     "errorwhileretrievingcontacts": "Erro ao recuperar contatos a partir do servidor.",
     "errorwhileretrievingdiscussions": "Erro ao recuperar discussão do servidor.",
     "errorwhileretrievingmessages": "Erro ao recuperar as mensagens do servidor.",
-    "message": "Corpo da mensagem",
     "messagenotsent": "A mensagem não foi enviada. Por favor tente novamente mais tarde.",
     "messages": "Mensagens",
     "mustbeonlinetosendmessages": "Você precisa estar conectado para enviar mensagens.",
@@ -27,6 +25,5 @@
     "type_online": "Online",
     "type_search": "Resultados de busca",
     "type_strangers": "Outros",
-    "unblockcontact": "Desbloquear contato",
-    "warningmessagenotsent": "Não pode enviar mensagem(s) para o usuário {{user}}. {{error}}"
+    "unblockcontact": "Desbloquear contato"
 }

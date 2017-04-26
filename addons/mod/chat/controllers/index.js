@@ -21,8 +21,7 @@ angular.module('mm.addons.mod_chat')
  * @ngdoc controller
  * @name mmaModChatIndexCtrl
  */
-.controller('mmaModChatIndexCtrl', function($scope, $stateParams, $mmaModChat, $mmUtil, $q, $mmCourse, $mmText, $translate,
-            mmaModChatComponent) {
+.controller('mmaModChatIndexCtrl', function($scope, $stateParams, $mmaModChat, $mmUtil, $q, $mmCourse, $mmText, $translate) {
     var module = $stateParams.module || {},
         courseid = $stateParams.courseid,
         chat;
@@ -32,8 +31,6 @@ angular.module('mm.addons.mod_chat')
     $scope.moduleUrl = module.url;
     $scope.courseid = courseid;
     $scope.refreshIcon = 'spinner';
-    $scope.component = mmaModChatComponent;
-    $scope.componentId = module.id;
 
     // Convenience function to get chat data.
     function fetchChatData(refresh) {
@@ -79,14 +76,14 @@ angular.module('mm.addons.mod_chat')
 
     // Context Menu Description action.
     $scope.expandDescription = function() {
-        $mmText.expandText($translate.instant('mm.core.description'), $scope.description, false, mmaModChatComponent, module.id);
+        $mmText.expandText($translate.instant('mm.core.description'), $scope.description);
     };
 
     // Pull to refresh.
     $scope.refreshChat = function() {
         if ($scope.chatLoaded) {
             $scope.refreshIcon = 'spinner';
-            return fetchChatData(true).finally(function() {
+            fetchChatData(true).finally(function() {
                 $scope.refreshIcon = 'ion-refresh';
                 $scope.$broadcast('scroll.refreshComplete');
             });

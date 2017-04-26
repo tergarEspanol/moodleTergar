@@ -1,5 +1,14 @@
 {
+    "average": "Průměr",
+    "contributiontocoursetotal": "Příspěvek do celkové známky kurzu",
+    "feedback": "Zpětná vazba",
+    "grade": "Známka",
+    "grades": "Známky",
     "itemname": "Položka známky",
-    "nogradesreturned": "Nebyly nalezeny žádné známky",
-    "viewgrades": "Zobrazit známky"
+    "lettergrade": "Slovní známka",
+    "percentage": "Procenta",
+    "range": "Rozsah",
+    "rank": "Pořadí",
+    "viewgrades": "Zobrazit známky",
+    "weight": "Váha"
 }
