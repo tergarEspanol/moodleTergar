@@ -37527,6 +37527,6 @@ angular.module('mm.core')
     "wsextservice" : "local_mobile",
     "demo_sites": {},
     "siteurl": "http://aprendizaje.tergarmexico.org/cursos/",
-    "gcmpn": "694767596569"
+    "gcmpn": "123456789"
 }
 );
